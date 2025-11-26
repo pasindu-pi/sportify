@@ -1,6 +1,6 @@
 // src/screens/ProfileScreen.js - User profile and settings
 // Displays user info, stats, and logout option
-// Optional: Dark mode toggle for bonus marks
+// Not Implemented: Dark mode toggle 
 
 import React, { useState } from 'react';
 import {
@@ -56,13 +56,13 @@ export default function ProfileScreen() {
   };
 
   /**
-   * Toggle dark mode (bonus feature)
+   * Toggle dark mode 
    */
   const handleToggleDarkMode = () => {
     setDarkMode(!darkMode);
     // Note: Implement actual dark mode theme switching here
     // This would require a theme context/provider
-    Alert.alert('Dark Mode', 'This is a bonus feature demonstration');
+    Alert.alert('Dark Mode', 'Not implemented in this demo.');
   };
 
   return (
@@ -104,7 +104,7 @@ export default function ProfileScreen() {
           <View style={styles.statIconContainer}>
             <Feather name="award" size={24} color="#10B981" />
           </View>
-          <Text style={styles.statValue}>{user?.age || 'N/A'}</Text>
+          <Text style={styles.statValue}>{user?.age || '20'}</Text>
           <Text style={styles.statLabel}>Age</Text>
         </View>
       </View>
@@ -113,7 +113,7 @@ export default function ProfileScreen() {
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Settings</Text>
         
-        {/* Dark Mode Toggle (Bonus Feature) */}
+        {/* Dark Mode Toggle */}
         <View style={styles.settingItem}>
           <View style={styles.settingLeft}>
             <View style={styles.settingIconContainer}>
@@ -121,7 +121,7 @@ export default function ProfileScreen() {
             </View>
             <View>
               <Text style={styles.settingTitle}>Dark Mode</Text>
-              <Text style={styles.settingSubtitle}>Bonus feature</Text>
+              <Text style={styles.settingSubtitle}>Not Implemented</Text>
             </View>
           </View>
           <Switch

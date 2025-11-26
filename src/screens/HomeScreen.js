@@ -1,5 +1,5 @@
-// src/screens/HomeScreen.js - Main screen showing teams list
-// Fetches and displays sports teams from API
+// src/screens/HomeScreen.js - Main screen with league selector
+// Displays cricket teams from selected league
 
 import React, { useEffect } from 'react';
 import {
@@ -11,32 +11,42 @@ import {
   Image,
   ActivityIndicator,
   RefreshControl,
+  ScrollView,
 } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigation } from '@react-navigation/native';
 import { Feather } from '@expo/vector-icons';
 
 // Import Redux actions
-import { getTeams, setSelectedTeam } from '../redux/teamsSlice';
+import { getTeams, setSelectedTeam, setSelectedLeague } from '../redux/teamsSlice';
+import { CRICKET_LEAGUES } from '../services/api';
 
 export default function HomeScreen() {
   const dispatch = useDispatch();
   const navigation = useNavigation();
   
   // Get teams data and loading state from Redux
-  const { teams, loading, error } = useSelector((state) => state.teams);
+  const { teams, loading, error, selectedLeague } = useSelector((state) => state.teams);
   const favourites = useSelector((state) => state.favourites.favourites);
 
-  // Fetch teams when component mounts
+  // Fetch teams when component mounts or when league changes
   useEffect(() => {
-    fetchTeamsData();
-  }, []);
+    fetchTeamsData(selectedLeague);
+  }, [selectedLeague]);
 
   /**
-   * Fetch teams from API
+   * Fetch teams from API for selected league
    */
-  const fetchTeamsData = () => {
-    dispatch(getTeams());
+  const fetchTeamsData = (leagueApiName) => {
+    dispatch(getTeams(leagueApiName));
+  };
+
+  /**
+   * Handle league selection
+   * @param {string} leagueApiName - API name of the selected league
+   */
+  const handleLeagueChange = (leagueApiName) => {
+    dispatch(setSelectedLeague(leagueApiName));
   };
 
   /**
@@ -58,6 +68,43 @@ export default function HomeScreen() {
    */
   const isFavourite = (teamId) => {
     return favourites.some((fav) => fav.idTeam === teamId);
+  };
+
+  /**
+   * Render league selector buttons
+   */
+  const renderLeagueSelector = () => {
+    return (
+      <View style={styles.leagueSelectorContainer}>
+        <ScrollView 
+          horizontal 
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.leagueScrollContent}
+        >
+          {CRICKET_LEAGUES.map((league) => {
+            const isSelected = selectedLeague === league.apiName;
+            return (
+              <TouchableOpacity
+                key={league.id}
+                style={[
+                  styles.leagueButton,
+                  isSelected && styles.leagueButtonActive
+                ]}
+                onPress={() => handleLeagueChange(league.apiName)}
+              >
+                <Text style={styles.leagueFlag}>{league.flag}</Text>
+                <Text style={[
+                  styles.leagueButtonText,
+                  isSelected && styles.leagueButtonTextActive
+                ]}>
+                  {league.shortName}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
+        </ScrollView>
+      </View>
+    );
   };
 
   /**
@@ -99,7 +146,7 @@ export default function HomeScreen() {
         <View style={styles.badgeContainer}>
           <View style={styles.badge}>
             <Text style={styles.badgeText}>
-              {item.strSport || 'Soccer'}
+              {item.strSport || 'Cricket'}
             </Text>
           </View>
           
@@ -121,8 +168,8 @@ export default function HomeScreen() {
   const renderEmptyState = () => (
     <View style={styles.emptyState}>
       <Feather name="inbox" size={64} color="#9CA3AF" />
-      <Text style={styles.emptyText}>No teams found</Text>
-      <TouchableOpacity style={styles.retryButton} onPress={fetchTeamsData}>
+      <Text style={styles.emptyText}>No teams found for this league</Text>
+      <TouchableOpacity style={styles.retryButton} onPress={() => fetchTeamsData(selectedLeague)}>
         <Text style={styles.retryButtonText}>Retry</Text>
       </TouchableOpacity>
     </View>
@@ -133,24 +180,40 @@ export default function HomeScreen() {
    */
   if (error) {
     return (
-      <View style={styles.centerContainer}>
-        <Feather name="alert-circle" size={64} color="#EF4444" />
-        <Text style={styles.errorText}>{error}</Text>
-        <TouchableOpacity style={styles.retryButton} onPress={fetchTeamsData}>
-          <Text style={styles.retryButtonText}>Try Again</Text>
-        </TouchableOpacity>
+      <View style={styles.container}>
+        {renderLeagueSelector()}
+        <View style={styles.centerContainer}>
+          <Feather name="alert-circle" size={64} color="#EF4444" />
+          <Text style={styles.errorText}>{error}</Text>
+          <TouchableOpacity 
+            style={styles.retryButton} 
+            onPress={() => fetchTeamsData(selectedLeague)}
+          >
+            <Text style={styles.retryButtonText}>Try Again</Text>
+          </TouchableOpacity>
+        </View>
       </View>
     );
   }
 
+  // Get current league info for header
+  const currentLeague = CRICKET_LEAGUES.find(l => l.apiName === selectedLeague);
+
   return (
     <View style={styles.container}>
+      {/* League Selector */}
+      {renderLeagueSelector()}
+
       {/* Header Info */}
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>IPL Cricket Teams</Text>
-        <Text style={styles.headerSubtitle}>
-          {teams.length} teams available
-        </Text>
+        <View style={styles.headerLeft}>
+          <Text style={styles.headerTitle}>
+            {currentLeague?.flag} {currentLeague?.name || 'Cricket Teams'}
+          </Text>
+          <Text style={styles.headerSubtitle}>
+            {teams.length} teams available
+          </Text>
+        </View>
       </View>
 
       {/* Teams List */}
@@ -164,7 +227,7 @@ export default function HomeScreen() {
         refreshControl={
           <RefreshControl
             refreshing={loading}
-            onRefresh={fetchTeamsData}
+            onRefresh={() => fetchTeamsData(selectedLeague)}
             colors={['#4F46E5']}
           />
         }
@@ -186,11 +249,51 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#F9FAFB',
   },
+  leagueSelectorContainer: {
+    backgroundColor: '#fff',
+    borderBottomWidth: 1,
+    borderBottomColor: '#E5E7EB',
+    paddingVertical: 12,
+  },
+  leagueScrollContent: {
+    paddingHorizontal: 16,
+    gap: 8,
+  },
+  leagueButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    backgroundColor: '#F3F4F6',
+    marginRight: 8,
+    gap: 6,
+  },
+  leagueButtonActive: {
+    backgroundColor: '#4F46E5',
+  },
+  leagueFlag: {
+    fontSize: 18,
+  },
+  leagueButtonText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#6B7280',
+  },
+  leagueButtonTextActive: {
+    color: '#fff',
+  },
   header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     padding: 16,
     backgroundColor: '#fff',
     borderBottomWidth: 1,
     borderBottomColor: '#E5E7EB',
+  },
+  headerLeft: {
+    flex: 1,
   },
   headerTitle: {
     fontSize: 18,
@@ -280,6 +383,7 @@ const styles = StyleSheet.create({
     color: '#6B7280',
     marginTop: 16,
     marginBottom: 24,
+    textAlign: 'center',
   },
   errorText: {
     fontSize: 16,

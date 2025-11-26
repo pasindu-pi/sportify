@@ -10,16 +10,17 @@ const initialState = {
   loading: false,       // Loading state during API fetch
   error: null,          // Error message if fetch fails
   selectedTeam: null,   // Currently selected team for details screen
+  selectedLeague: 'Indian%20Premier%20League', // Currently selected league
 };
 
-// Async thunk to fetch teams from API
+// Async thunk to fetch teams from API by league
 // This action can be dispatched from any component
 export const getTeams = createAsyncThunk(
   'teams/getTeams',     // Action type name
-  async (_, { rejectWithValue }) => {
+  async (leagueApiName = 'Indian%20Premier%20League', { rejectWithValue }) => {
     try {
-      // Call the API service to fetch teams
-      const data = await fetchTeams();
+      // Call the API service to fetch teams for the selected league
+      const data = await fetchTeams(leagueApiName);
       
       // Return the teams array (will be stored in state)
       return data.teams || [];
@@ -45,6 +46,11 @@ const teamsSlice = createSlice({
     // Clear selected team (useful when navigating back)
     clearSelectedTeam: (state) => {
       state.selectedTeam = null;
+    },
+    
+    // Set the selected league
+    setSelectedLeague: (state, action) => {
+      state.selectedLeague = action.payload;
     },
     
     // Clear any error messages
@@ -76,7 +82,12 @@ const teamsSlice = createSlice({
 });
 
 // Export actions for use in components
-export const { setSelectedTeam, clearSelectedTeam, clearTeamsError } = teamsSlice.actions;
+export const { 
+  setSelectedTeam, 
+  clearSelectedTeam, 
+  setSelectedLeague,
+  clearTeamsError 
+} = teamsSlice.actions;
 
 // Export reducer to be included in store
 export default teamsSlice.reducer;

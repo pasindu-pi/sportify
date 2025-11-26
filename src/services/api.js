@@ -42,27 +42,54 @@ export const loginUser = async (credentials) => {
 };
 
 // ============================================
-// SPORTS DATA API
+// SPORTS DATA API - CRICKET LEAGUES
 // ============================================
 
 /**
- * Fetch Cricket teams from England
+ * Available cricket leagues
+ * Used for league selector in HomeScreen
+ */
+export const CRICKET_LEAGUES = [
+  {
+    id: 'ipl',
+    name: 'Indian Premier League',
+    shortName: 'IPL',
+    apiName: 'Indian%20Premier%20League',
+    flag: '🇮🇳'
+  },
+  {
+    id: 'bbl',
+    name: 'Big Bash League',
+    shortName: 'BBL',
+    apiName: 'Big%20Bash%20League',
+    flag: '🇦🇺'
+  },
+  {
+    id: 'psl',
+    name: 'Pakistan Super League',
+    shortName: 'PSL',
+    apiName: 'Pakistan%20Super%20League',
+    flag: '🇵🇰'
+  },
+  {
+    id: 'cpl',
+    name: 'Caribbean Premier League',
+    shortName: 'CPL',
+    apiName: 'Caribbean%20Premier%20League',
+    flag: '🏴‍☠️'
+  },
+];
+
+/**
+ * Fetch cricket teams by league
+ * @param {string} leagueApiName - League API name (e.g., 'Indian%20Premier%20League')
  * @returns {Promise} - Array of teams
  */
-export const fetchTeams = async () => {
+export const fetchTeams = async (leagueApiName = 'Indian%20Premier%20League') => {
   try {
-    // Make GET request to search teams endpoint
-    // Parameters: s=Soccer (sport), c=England (country)
-    const leagues = [
-      'Indian%20Premier%20League',  // IPL
-      'Big%20Bash%20League',        // BBL (Australia)
-      'Pakistan%20Super%20League',  // PSL
-      'Caribbean%20Premier%20League' // CPL
-    ];
-    
-    // Fetch from IPL (or change index to get different league)
+    // Make GET request to search teams by league
     const response = await axios.get(
-      `${SPORTS_API}/search_all_teams.php?l=${leagues[0]}`
+      `${SPORTS_API}/search_all_teams.php?l=${leagueApiName}`
     );
     
     // Return teams data
@@ -117,4 +144,5 @@ export default {
   fetchTeams,
   searchTeams,
   getTeamDetails,
+  CRICKET_LEAGUES,
 };
